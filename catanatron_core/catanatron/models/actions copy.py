@@ -39,23 +39,6 @@ from catanatron.state_functions import (
     player_resource_freqdeck_contains,
 )
 
-def player_freqdeck_add(state, color, freqdeck):
-    key = player_key(state, color)
-    state.player_state[f"{key}_WOOD_IN_HAND"] += freqdeck[0]
-    state.player_state[f"{key}_BRICK_IN_HAND"] += freqdeck[1]
-    state.player_state[f"{key}_SHEEP_IN_HAND"] += freqdeck[2]
-    state.player_state[f"{key}_WHEAT_IN_HAND"] += freqdeck[3]
-    state.player_state[f"{key}_ORE_IN_HAND"] += freqdeck[4]
-
-
-def player_freqdeck_subtract(state, color, freqdeck):
-    key = player_key(state, color)
-    state.player_state[f"{key}_WOOD_IN_HAND"] -= freqdeck[0]
-    state.player_state[f"{key}_BRICK_IN_HAND"] -= freqdeck[1]
-    state.player_state[f"{key}_SHEEP_IN_HAND"] -= freqdeck[2]
-    state.player_state[f"{key}_WHEAT_IN_HAND"] -= freqdeck[3]
-    state.player_state[f"{key}_ORE_IN_HAND"] -= freqdeck[4]
-
 
 def generate_playable_actions(state) -> List[Action]:
     action_prompt = state.current_prompt
@@ -112,38 +95,9 @@ def generate_playable_actions(state) -> List[Action]:
 
         # can only accept if have enough cards
         freqdeck = get_player_freqdeck(state, color)
-        asked = state.current_trade[5:10]        
-
+        asked = state.current_trade[5:10]
         if freqdeck_contains(freqdeck, asked):
-
-            # Before trade
-            n_roads = len(road_building_possibilities(state, color, False))
-            n_settlements = len(settlement_possibilities(state, color))
-            n_cities = len(city_possibilities(state, color))
-
-            n_score = n_roads + n_settlements + n_cities
-
-            # After trade
-
-            offered = state.current_trade[0:5]
-
-            state_copy = state.copy()
-
-            player_freqdeck_subtract(state_copy, color, asked)  # pretend to subtract
-            player_freqdeck_add(state_copy, color, offered)  # pretend to add
-
-            n_roads = len(road_building_possibilities(state_copy, color, False))
-            n_settlements = len(settlement_possibilities(state_copy, color))
-            n_cities = len(city_possibilities(state_copy, color))
-
-            n_score_after = n_roads + n_settlements + n_cities
-
-            t = state.current_player()
-
-            if n_score_after <  t.altruism * n_score:
-                return actions
-            else:
-                actions.append(Action(color, ActionType.ACCEPT_TRADE, state.current_trade))              
+            actions.append(Action(color, ActionType.ACCEPT_TRADE, state.current_trade))
 
         return actions
     elif action_prompt == ActionPrompt.DECIDE_ACCEPTEES:
